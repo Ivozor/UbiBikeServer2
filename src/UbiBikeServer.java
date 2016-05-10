@@ -53,7 +53,7 @@ public class UbiBikeServer {
         {
             String result;
             // message parameters are separated by the character |
-            String[] splitMessage = clientmessage.split("|");
+            String[] splitMessage = clientmessage.split("\\|");
 
             // 1 - operation is the 1st parameter in the message (REGISTER, LOGIN)
             switch (splitMessage[0]) {
@@ -80,7 +80,7 @@ public class UbiBikeServer {
                     break;
 
                 default:
-                    result = "Invalid Operation: " + splitMessage[0].toString();
+                    result = "Invalid Operation: " + splitMessage[0];
                     break;
 
             }
