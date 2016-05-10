@@ -24,25 +24,38 @@ public class UbiBikeServer {
         stations.put(station2.stationName, station2);
 
 
-        String str;
         try {
             ServerSocket servSocket = new ServerSocket(4444);
-            System.out.println("Waiting for a connection on " + 4444);
 
-            Socket fromClientSocket = servSocket.accept();
+            while(true) {
+                String str;
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(fromClientSocket.getInputStream(), Charset.forName("utf-8")));
-
-            while ((str = br.readLine()) != null) {
-                System.out.println("The message: " + str);
-                String result = parseMessage(str);
-                System.out.println("The result: " + result);
+                System.out.println("Waiting for a connection on " + 4444);
 
 
+                Socket fromClientSocket = servSocket.accept();
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(fromClientSocket.getInputStream(), Charset.forName("utf-8")));
+                PrintWriter pw = new PrintWriter(fromClientSocket.getOutputStream(), true);
+
+
+                while ((str = br.readLine()) != null) {
+
+                    System.out.println("The message: " + str);
+                    String result = parseMessage(str);
+                    System.out.println("The result: " + result);
+
+                    pw.write(result);
+                    System.out.println("Result sent!");
+
+
+
+
+                }
+                br.close();
+
+                fromClientSocket.close();
             }
-            br.close();
-
-            fromClientSocket.close();
         } catch (Exception ex) {
             System.out.println("Error in server main: " + ex);
         }
