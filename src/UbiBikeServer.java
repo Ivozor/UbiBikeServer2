@@ -5,12 +5,6 @@ import java.util.*;
 
 public class UbiBikeServer {
 
-    private static ServerSocket serverSocket;
-    private static Socket clientSocket;
-    private static ObjectInputStream objectInputStream;
-    private static ObjectOutputStream objectOutputStream;
-    private static ClientMessage clientMessage;
-
     private static HashMap<String, User> users = new HashMap<String, User>();
     private static HashMap<String, User> loggedUsers = new HashMap<String, User>();
     private static HashMap<String, Station> stations = new HashMap<String, Station>();
@@ -18,85 +12,77 @@ public class UbiBikeServer {
 
 
     public static void main(String[] args) {
-        try {
-            serverSocket = new ServerSocket(4444); // Server socket
 
-        } catch (IOException e) {
-            System.out.println("Could not listen on port: 4444");
-        }
 
         System.out.println("UbiBike Server 2 started!");
 
         // TODO - init stations properly
         Station station1 = new Station("station1", new Location(111, 111, 111), 5);
-        Station station2 = new Station("station1", new Location(222, 222, 222), 5);
+        Station station2 = new Station("station2", new Location(222, 222, 222), 5);
         stations.put(station1.stationName, station1);
         stations.put(station2.stationName, station2);
 
 
-        while (true) {
-            try {
-                //TODO - find a good way to send and receive data
-                clientSocket = serverSocket.accept(); // accept the client connection
+        String str;
+        try {
+            ServerSocket servSocket = new ServerSocket(4444);
+            System.out.println("Waiting for a connection on " + 4444);
 
-                objectInputStream = new ObjectInputStream(clientSocket.getInputStream());
-                clientMessage = (ClientMessage)objectInputStream.readObject() ;
-                objectInputStream.close();
+            Socket fromClientSocket = servSocket.accept();
+            PrintWriter pw = new PrintWriter(fromClientSocket.getOutputStream(), true);
 
-                System.out.println("Message: " + clientMessage.message);
+            BufferedReader br = new BufferedReader(new InputStreamReader(fromClientSocket.getInputStream()));
 
-                ClientMessage response = parseMessage(clientMessage);
+            while ((str = br.readLine()) != null) {
+                System.out.println("The message: " + str);
+                String result = parseMessage(str);
+                System.out.println("The result: " + result);
 
-                System.out.println("parseMessage result: " + response.message);
 
-                objectOutputStream = new ObjectOutputStream(clientSocket.getOutputStream());
-                objectOutputStream.writeObject(response);
-                objectOutputStream.close();
-
-                clientSocket.close();
-
-            } catch (Exception ex) {
-                System.out.println("Problem in message reading...");
-                System.out.println(ex);
             }
+            pw.close();
+            br.close();
+
+            fromClientSocket.close();
+        } catch (Exception ex) {
+            System.out.println("Error in server main: " + ex);
         }
     }
 
-    private static ClientMessage parseMessage(ClientMessage clientmessage) {
+    private static String parseMessage(String clientmessage) {
         try
         {
-            ClientMessage result = new ClientMessage("", null);
-
+            String result;
             // message parameters are separated by the character |
-            String[] splitMessage = clientmessage.message.split("|");
+            String[] splitMessage = clientmessage.split("|");
 
             // 1 - operation is the 1st parameter in the message (REGISTER, LOGIN)
             switch (splitMessage[0]) {
                 case "REGISTER":
-                    result = register(splitMessage, clientmessage);
+                    result = register(splitMessage);
                     break;
                 case "LOGIN":
-                    result = login(splitMessage, clientmessage);
+                    result = login(splitMessage);
                     break;
                 case "LOGOUT":
-                    result = logout(splitMessage, clientmessage);
+                    result = logout(splitMessage);
                     break;
                 case "SENDPOINTS":
-                    result = sendPoints(splitMessage, clientmessage);
+                    result = sendPoints(splitMessage);
                     break;
                 case "USERINFO":
-                    result = getUserInfo(splitMessage, clientmessage);
+                    result = getUserInfo(splitMessage);
                     break;
                 case "RESERVE":
-                    result = reserveBike(splitMessage, clientmessage);
+                    result = reserveBike(splitMessage);
                     break;
                 case "STATIONSBIKES":
-                    result = stationsWithBikes(splitMessage, clientmessage);
+                    result = stationsWithBikes(splitMessage);
                     break;
 
                 default:
-                    result = new ClientMessage("Invalid Operation: " + splitMessage[0].toString(), null);
-
+                    result = "Invalid Operation: " + splitMessage[0].toString();
+                    break;
 
             }
 
@@ -106,7 +92,7 @@ public class UbiBikeServer {
             System.out.println("Error while parsing the message:");
             System.out.println(ex);
 
-            return new ClientMessage("ERROR", null);
+            return "ERROR";
         }
     }
 
@@ -114,21 +100,17 @@ public class UbiBikeServer {
 
     //region Functionalities
 
-    private static ClientMessage register(String[] splitMessage, ClientMessage message) {
+    private static String register(String[] splitMessage) {
         //Message Template: REGISTER|username|password
         try {
-            ClientMessage result = new ClientMessage("", null);
-
             if(splitMessage.length != 3) {
-                result.message = "Register error: Invalid number of parameters!";
-                return result;
+                return "Register error: Invalid number of parameters!";
             }
 
             String username = splitMessage[1];
 
             if(users.containsKey(username)) {
-                result.message = "Register error: User already exists";
-                return result;
+                return "Register error: User already exists";
             }
             else {
                 String password = splitMessage[2];
@@ -136,36 +118,28 @@ public class UbiBikeServer {
                 User newUser = new User(username, password);
                 users.put(username, newUser);
 
-                ClientMessage.message = "User '" + username + "' has been created!";
-
-                return result;
+                return "User '" + username + "' has been created!";
             }
-
-
         }
         catch (Exception ex) {
             System.out.println("Error while registering the user:");
             System.out.println(ex);
-            return new ClientMessage("Register error.", null);
+            return "Register error.";
         }
     }
 
-    private static ClientMessage login(String[] splitMessage, ClientMessage message) {
+    private static String login(String[] splitMessage) {
         //Message Template: LOGIN|username|password
         try {
-            ClientMessage result = new ClientMessage("", null);
-
             if(splitMessage.length != 3)
             {
-                result.message = "Login error: Invalid number of parameters!";
-                return result;
+                return "Login error: Invalid number of parameters!";
             }
 
             String username = splitMessage[1];
 
             if(!users.containsKey(username)) {
-                result.message = "Login error: User '\" + username + \"' is not registered!";
-                return result;
+                return "Login error: User '\" + username + \"' is not registered!";
             }
 
             String password = splitMessage[2];
@@ -173,69 +147,60 @@ public class UbiBikeServer {
             User activeUser = users.get(username);
             if(activeUser.password.equals(password)) {
                 loggedUsers.put(username, activeUser);
-                result.message = "User '" + username + "' logged in!";
-                result.content = activeUser;
-                return result;
+                return "User '" + username + "' logged in!";
             }
             else {
-                result.message = "Invalid password for user '" + username + "'!";
-                return result;
+                return "Invalid password for user '" + username + "'!";
             }
 
         }
         catch (Exception ex) {
             System.out.println("Error while logging in the user:");
             System.out.println(ex);
-            return new ClientMessage("Login error.", null);
+            return "Login error.";
         }
     }
 
-    private static ClientMessage logout(String[] splitMessage, ClientMessage message) {
+    private static String logout(String[] splitMessage) {
         //Message Template: LOGOUT|username
         try {
-            ClientMessage result = new ClientMessage("", null);
 
             if(splitMessage.length != 2)
             {
-                result.message = "Login error: Invalid number of parameters!";
-                return result;
+                return "Login error: Invalid number of parameters!";
             }
 
             String username = splitMessage[1];
 
             if(!users.containsKey(username)) {
-                result.message = "Logout error: User '" + username + "' is not registered!";
-                return result;
+                return "Logout error: User '" + username + "' is not registered!";
             }
 
 
             User activeUser = users.get(username);
             if(loggedUsers.containsKey(username)) {
                 loggedUsers.remove(username);
-                result.message = "User '" + username + "' logged out!";
-                return result;
+                return "User '" + username + "' logged out!";
+            }
+            else {
+                return "User '" + username + "' was not logged in!";
             }
 
-
-
-            return result;
         }
         catch (Exception ex) {
             System.out.println("Error while logging out the user:");
             System.out.println(ex);
-            return new ClientMessage("Logout error.", null);
+            return "Logout error.";
         }
     }
 
-    private static ClientMessage sendPoints(String[] splitMessage, ClientMessage message) {
+    private static String sendPoints(String[] splitMessage) {
         //Message Template: SENDPOINTS|username1|username2|points
         try {
-            ClientMessage result = new ClientMessage("", null);
 
             if(splitMessage.length != 4)
             {
-                result.message = "Login error: Invalid number of parameters!";
-                return result;
+                return "Login error: Invalid number of parameters!";
             }
 
             String username1 = splitMessage[1];
@@ -244,12 +209,10 @@ public class UbiBikeServer {
 
 
             if(!users.containsKey(username1)) {
-                result.message = "Send points error: Origin user '" + username1 + "' is not registered!";
-                return result;
+                return "Send points error: Origin user '" + username1 + "' is not registered!";
             }
             if(!users.containsKey(username2)) {
-                result.message = "Send points error: Destination user '" + username2 + "' is not registered!";
-                return result;
+                return "Send points error: Destination user '" + username2 + "' is not registered!";
             }
 
 
@@ -258,84 +221,72 @@ public class UbiBikeServer {
 
             if(loggedUsers.containsKey(username1)) {
                 if(user1.points < pointsToSend) {
-                    result.message = "User '" + username1 + "' doesn't have enough points to send!";
-                    return result;
+                    return "User '" + username1 + "' doesn't have enough points to send!";
                 }
                 else {
                     user1.points -= pointsToSend;
                     user2.points += pointsToSend;
-                    result.message = "User '" + username1 + "' gave '" + pointsToSend + "' points to user '" + username2 + "'!";
-                    return result;
+                    return "User '" + username1 + "' gave '" + pointsToSend + "' points to user '" + username2 + "'!";
 
                 }
             }
             else {
-                result.message = "User '" + username1 + "' must be logged in to send points!";
-                return result;
+                return "User '" + username1 + "' must be logged in to send points!";
             }
         }
         catch (Exception ex) {
             System.out.println("Error while logging out the user:");
             System.out.println(ex);
-            return new ClientMessage("Logout error.", null);
+            return "Logout error.";
 
         }
     }
 
-    private static ClientMessage getUserInfo(String[] splitMessage, ClientMessage message) {
+    private static String getUserInfo(String[] splitMessage) {
         //Message Template: USERINFO|username
         try {
-            ClientMessage result = new ClientMessage("", null);
 
             if(splitMessage.length != 2)
             {
-                result.message = "User info error: Invalid number of parameters!";
-                return result;
+                return "User info error: Invalid number of parameters!";
             }
 
             String username = splitMessage[1];
 
             if(!users.containsKey(username)) {
-                result.message = "User info error: User '" + username + "' is not registered!";
-                return result;
+                return "User info error: User '" + username + "' is not registered!";
             }
 
 
             User activeUser = users.get(username);
             if(loggedUsers.containsKey(username)) {
-                result.message = "User '" + username + "' info available.";
-                result.content = activeUser;
-                return result;
+                return "User '" + username + "' info available.";
             }
             else {
-                result.message = "User '" + username + "' must be logged in to get his info!";
-                return result;
+                return "User '" + username + "' must be logged in to get his info!";
             }
         }
         catch (Exception ex) {
             System.out.println("Error while getting info of the user:");
             System.out.println(ex);
-            return new ClientMessage("User info error.", null);
+            return "User info error.";
         }
     }
 
-    private static ClientMessage reserveBike(String[] splitMessage, ClientMessage message) {
+    private static String reserveBike(String[] splitMessage) {
         //Message Template: RESERVE|username|stationname
         try {
-            ClientMessage result = new ClientMessage("", null);
 
             if(splitMessage.length != 3)
             {
-                result.message = "Reservation error: Invalid number of parameters!";
-                return result;
+                return "Reservation error: Invalid number of parameters!";
             }
 
             String username = splitMessage[1];
             String stationname = splitMessage[2];
 
             if(!users.containsKey(username)) {
-                result.message = "Reservation error: User '" + username + "' is not registered!";
-                return result;
+                return "Reservation error: User '" + username + "' is not registered!";
             }
 
 
@@ -346,50 +297,41 @@ public class UbiBikeServer {
                     if(station.bikes > station.reservations.size())
                     {
                         station.reservations.add(username);
-                        result.message = "Bike reserved for user '" + username + "' in station '" + stationname + "'!";
-                        result.content = station;
-
-                        return result;
+                        return "Bike reserved for user '" + username + "' in station '" + stationname + "'!";
                     }
                     else {
-                        result.message = "No bikes available for reservation in station '" + stationname + "'!";
-                        return result;
+                        return "No bikes available for reservation in station '" + stationname + "'!";
                     }
                 }
                 else {
-                    result.message = "Station '" + stationname + "' is not available!";
-                    return result;
+                    return "Station '" + stationname + "' is not available!";
                 }
             }
             else {
-                result.message = "User '" + username + "' must be logged in to reserve a bike!";
-                return result;
+                return "User '" + username + "' must be logged in to reserve a bike!";
             }
         }
         catch (Exception ex) {
             System.out.println("Error while reserving:");
             System.out.println(ex);
-            return new ClientMessage("Reserving error.", null);
+            return "Reserving error.";
         }
     }
 
 
-    private static ClientMessage stationsWithBikes(String[] splitMessage, ClientMessage message) {
+    private static String stationsWithBikes(String[] splitMessage) {
         //Message Template: STATIONSBIKES|username
         try {
-            ClientMessage result = new ClientMessage("", null);
 
             if(splitMessage.length != 2)
             {
-                result.message = "Get stations with bikes error: Invalid number of parameters!";
-                return result;
+                return "Get stations with bikes error: Invalid number of parameters!";
             }
 
             String username = splitMessage[1];
 
             if(!users.containsKey(username)) {
-                result.message = "Get stations with bikes error: User '" + username + "' is not registered!";
-                return result;
+                return "Get stations with bikes error: User '" + username + "' is not registered!";
             }
 
 
@@ -402,19 +344,16 @@ public class UbiBikeServer {
                         stationsAvailable.put(station.getKey(), station.getValue());
                     }
                 }
-                result.message = "Found '" + stationsAvailable.size() + "' stations with bikes available";
-                result.content = stationsAvailable;
-                return result;
+                return "Found '" + stationsAvailable.size() + "' stations with bikes available";
             }
             else {
-                result.message = "User '" + username + "' must be logged in to get the stations with bikes!";
-                return result;
+                return "User '" + username + "' must be logged in to get the stations with bikes!";
             }
         }
         catch (Exception ex) {
             System.out.println("Error while getting stations with bikes:");
             System.out.println(ex);
-            return new ClientMessage("Getting stations with bikes error.", null);
+            return "Getting stations with bikes error.";
         }
     }
 
@@ -480,16 +419,6 @@ public class UbiBikeServer {
             locations = locs;
         }
 
-    }
-
-    public static class ClientMessage {
-        public static String message;
-        public static Object content;
-
-        public ClientMessage(String mes, Object obj) {
-            message = mes;
-            content = obj;
-        }
     }
 
     //endregion
