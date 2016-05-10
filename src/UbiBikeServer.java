@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.Charset;
 import java.util.*;
 
 public class UbiBikeServer {
@@ -31,12 +32,12 @@ public class UbiBikeServer {
             Socket fromClientSocket = servSocket.accept();
             PrintWriter pw = new PrintWriter(fromClientSocket.getOutputStream(), true);
 
-            BufferedReader br = new BufferedReader(new InputStreamReader(fromClientSocket.getInputStream()));
+            BufferedReader br = new BufferedReader(new InputStreamReader(fromClientSocket.getInputStream(), Charset.forName("utf-8")));
 
             while ((str = br.readLine()) != null) {
-                System.out.println("The message: " + str);
+                pw.println("The message: " + str);
                 String result = parseMessage(str);
-                System.out.println("The result: " + result);
+                pw.println("The result: " + result);
 
 
             }
