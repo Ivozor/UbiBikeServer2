@@ -30,18 +30,16 @@ public class UbiBikeServer {
             System.out.println("Waiting for a connection on " + 4444);
 
             Socket fromClientSocket = servSocket.accept();
-            PrintWriter pw = new PrintWriter(fromClientSocket.getOutputStream(), true);
 
             BufferedReader br = new BufferedReader(new InputStreamReader(fromClientSocket.getInputStream(), Charset.forName("utf-8")));
 
             while ((str = br.readLine()) != null) {
-                pw.println("The message: " + str);
+                System.out.println("The message: " + str);
                 String result = parseMessage(str);
-                pw.println("The result: " + result);
+                System.out.println("The result: " + result);
 
 
             }
-            pw.close();
             br.close();
 
             fromClientSocket.close();
