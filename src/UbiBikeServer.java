@@ -107,13 +107,13 @@ public class UbiBikeServer {
         //Message Template: REGISTER|username|password
         try {
             if(splitMessage.length != 3) {
-                return "Register error: Invalid number of parameters!";
+                return "ERROR|Register error: Invalid number of parameters!";
             }
 
             String username = splitMessage[1];
 
             if(users.containsKey(username)) {
-                return "Register error: User already exists";
+                return "ERROR|Register error: User already exists";
             }
             else {
                 String password = splitMessage[2];
@@ -121,13 +121,13 @@ public class UbiBikeServer {
                 User newUser = new User(username, password);
                 users.put(username, newUser);
 
-                return "User '" + username + "' has been created!";
+                return "OK|User '" + username + "' has been created!";
             }
         }
         catch (Exception ex) {
             System.out.println("Error while registering the user:");
             System.out.println(ex);
-            return "Register error.";
+            return "ERROR|Register error.";
         }
     }
 
@@ -136,13 +136,13 @@ public class UbiBikeServer {
         try {
             if(splitMessage.length != 3)
             {
-                return "Login error: Invalid number of parameters!";
+                return "ERROR|Login error: Invalid number of parameters!";
             }
 
             String username = splitMessage[1];
 
             if(!users.containsKey(username)) {
-                return "Login error: User '" + username + "' is not registered!";
+                return "ERROR|Login error: User '" + username + "' is not registered!";
             }
 
             String password = splitMessage[2];
@@ -150,17 +150,17 @@ public class UbiBikeServer {
             User activeUser = users.get(username);
             if(activeUser.password.equals(password)) {
                 loggedUsers.put(username, activeUser);
-                return "User '" + username + "' logged in!";
+                return "OK|User '" + username + "' logged in!";
             }
             else {
-                return "Invalid password for user '" + username + "'!";
+                return "ERROR|Invalid password for user '" + username + "'!";
             }
 
         }
         catch (Exception ex) {
             System.out.println("Error while logging in the user:");
             System.out.println(ex);
-            return "Login error.";
+            return "ERROR|Login error.";
         }
     }
 
@@ -170,30 +170,30 @@ public class UbiBikeServer {
 
             if(splitMessage.length != 2)
             {
-                return "Login error: Invalid number of parameters!";
+                return "ERROR|Login error: Invalid number of parameters!";
             }
 
             String username = splitMessage[1];
 
             if(!users.containsKey(username)) {
-                return "Logout error: User '" + username + "' is not registered!";
+                return "ERROR|Logout error: User '" + username + "' is not registered!";
             }
 
 
             User activeUser = users.get(username);
             if(loggedUsers.containsKey(username)) {
                 loggedUsers.remove(username);
-                return "User '" + username + "' logged out!";
+                return "OK|User '" + username + "' logged out!";
             }
             else {
-                return "User '" + username + "' was not logged in!";
+                return "ERROR|User '" + username + "' was not logged in!";
             }
 
         }
         catch (Exception ex) {
             System.out.println("Error while logging out the user:");
             System.out.println(ex);
-            return "Logout error.";
+            return "ERROR|Logout error.";
         }
     }
 
@@ -203,7 +203,7 @@ public class UbiBikeServer {
 
             if(splitMessage.length != 4)
             {
-                return "Login error: Invalid number of parameters!";
+                return "ERROR|Login error: Invalid number of parameters!";
             }
 
             String username1 = splitMessage[1];
@@ -212,10 +212,10 @@ public class UbiBikeServer {
 
 
             if(!users.containsKey(username1)) {
-                return "Send points error: Origin user '" + username1 + "' is not registered!";
+                return "ERROR|Send points error: Origin user '" + username1 + "' is not registered!";
             }
             if(!users.containsKey(username2)) {
-                return "Send points error: Destination user '" + username2 + "' is not registered!";
+                return "ERROR|Send points error: Destination user '" + username2 + "' is not registered!";
             }
 
 
@@ -224,23 +224,23 @@ public class UbiBikeServer {
 
             if(loggedUsers.containsKey(username1)) {
                 if(user1.points < pointsToSend) {
-                    return "User '" + username1 + "' doesn't have enough points to send!";
+                    return "ERROR|User '" + username1 + "' doesn't have enough points to send!";
                 }
                 else {
                     user1.points -= pointsToSend;
                     user2.points += pointsToSend;
-                    return "User '" + username1 + "' gave '" + pointsToSend + "' points to user '" + username2 + "'!";
+                    return "OK|User '" + username1 + "' gave '" + pointsToSend + "' points to user '" + username2 + "'!";
 
                 }
             }
             else {
-                return "User '" + username1 + "' must be logged in to send points!";
+                return "ERROR|User '" + username1 + "' must be logged in to send points!";
             }
         }
         catch (Exception ex) {
             System.out.println("Error while logging out the user:");
             System.out.println(ex);
-            return "Logout error.";
+            return "ERROR|Logout error.";
 
         }
     }
@@ -251,28 +251,39 @@ public class UbiBikeServer {
 
             if(splitMessage.length != 2)
             {
-                return "User info error: Invalid number of parameters!";
+                return "ERROR|User info error: Invalid number of parameters!";
             }
 
             String username = splitMessage[1];
 
             if(!users.containsKey(username)) {
-                return "User info error: User '" + username + "' is not registered!";
+                return "ERROR|User info error: User '" + username + "' is not registered!";
             }
 
 
             User activeUser = users.get(username);
             if(loggedUsers.containsKey(username)) {
-                return "User '" + username + "' info available.";
+                // messages template:
+                // ok | points | trajectorylist
+                // OK|123|&trajectory1name-xxxx+yyyy+zzzz-xxxx+yyyy+zzzz-xxxx+yyyy+zzzz&trajectory2-xxxx+yyyy+zzzz-xxxx+yyyy+zzzz-xxxx+yyyy+zzzz
+                String userPoints = new Integer(activeUser.points).toString();
+                String userTrajectories = "";
+                for (Trajectory trajectory: activeUser.trajectories) {
+                    userTrajectories += "&" + trajectory.trajectoryName;
+                    for (Location location: trajectory.locations) {
+                        userTrajectories += "-" + location.degrees + "+" + location.minutes + "+" + location.seconds;
+                    }
+                }
+                return "OK|" + userPoints + "|" + userTrajectories;
             }
             else {
-                return "User '" + username + "' must be logged in to get his info!";
+                return "ERROR|User '" + username + "' must be logged in to get his info!";
             }
         }
         catch (Exception ex) {
             System.out.println("Error while getting info of the user:");
             System.out.println(ex);
-            return "User info error.";
+            return "ERROR|User info error.";
         }
     }
 
@@ -282,14 +293,14 @@ public class UbiBikeServer {
 
             if(splitMessage.length != 3)
             {
-                return "Reservation error: Invalid number of parameters!";
+                return "ERROR|Reservation error: Invalid number of parameters!";
             }
 
             String username = splitMessage[1];
             String stationname = splitMessage[2];
 
             if(!users.containsKey(username)) {
-                return "Reservation error: User '" + username + "' is not registered!";
+                return "ERROR|Reservation error: User '" + username + "' is not registered!";
             }
 
 
@@ -300,24 +311,24 @@ public class UbiBikeServer {
                     if(station.bikes > station.reservations.size())
                     {
                         station.reservations.add(username);
-                        return "Bike reserved for user '" + username + "' in station '" + stationname + "'!";
+                        return "OK|Bike reserved for user '" + username + "' in station '" + stationname + "'!";
                     }
                     else {
-                        return "No bikes available for reservation in station '" + stationname + "'!";
+                        return "ERROR|No bikes available for reservation in station '" + stationname + "'!";
                     }
                 }
                 else {
-                    return "Station '" + stationname + "' is not available!";
+                    return "ERROR|Station '" + stationname + "' is not available!";
                 }
             }
             else {
-                return "User '" + username + "' must be logged in to reserve a bike!";
+                return "ERROR|User '" + username + "' must be logged in to reserve a bike!";
             }
         }
         catch (Exception ex) {
             System.out.println("Error while reserving:");
             System.out.println(ex);
-            return "Reserving error.";
+            return "ERROR|Reserving error.";
         }
     }
 
@@ -328,13 +339,13 @@ public class UbiBikeServer {
 
             if(splitMessage.length != 2)
             {
-                return "Get stations with bikes error: Invalid number of parameters!";
+                return "ERROR|Get stations with bikes error: Invalid number of parameters!";
             }
 
             String username = splitMessage[1];
 
             if(!users.containsKey(username)) {
-                return "Get stations with bikes error: User '" + username + "' is not registered!";
+                return "ERROR|Get stations with bikes error: User '" + username + "' is not registered!";
             }
 
 
@@ -347,16 +358,17 @@ public class UbiBikeServer {
                         stationsAvailable.put(station.getKey(), station.getValue());
                     }
                 }
-                return "Found '" + stationsAvailable.size() + "' stations with bikes available";
+                // TODO - add station data to string
+                return "OK|Found '" + stationsAvailable.size() + "' stations with bikes available";
             }
             else {
-                return "User '" + username + "' must be logged in to get the stations with bikes!";
+                return "ERROR|User '" + username + "' must be logged in to get the stations with bikes!";
             }
         }
         catch (Exception ex) {
             System.out.println("Error while getting stations with bikes:");
             System.out.println(ex);
-            return "Getting stations with bikes error.";
+            return "ERROR|Getting stations with bikes error.";
         }
     }
 
