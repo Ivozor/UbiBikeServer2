@@ -25,37 +25,31 @@ public class UbiBikeServer {
 
 
         try {
-            ServerSocket servSocket = new ServerSocket(4444);
-
-            while(true) {
-                String str;
-
-                System.out.println("Waiting for a connection on " + 4444);
-
-
-                Socket fromClientSocket = servSocket.accept();
-
-                BufferedReader br = new BufferedReader(new InputStreamReader(fromClientSocket.getInputStream(), Charset.forName("utf-8")));
-                PrintWriter pw = new PrintWriter(fromClientSocket.getOutputStream(), true);
-
-
-                while ((str = br.readLine()) != null) {
-
-                    System.out.println("The message: " + str);
-                    String result = parseMessage(str);
-                    System.out.println("The result: " + result);
-
-                    pw.write(result);
-                    System.out.println("Result sent!");
-
-
-
-
-                }
-                br.close();
-
-                fromClientSocket.close();
+            ServerSocket server = new ServerSocket(4444);
+            //keep listens indefinitely until receives 'exit' call or program terminates
+            while(true){
+                System.out.println("Waiting for client request");
+                //creating socket and waiting for client connection
+                Socket socket = server.accept();
+                //read from socket to ObjectInputStream object
+                ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                //convert ObjectInputStream object to String
+                String message = (String) ois.readObject();
+                System.out.println("Message Received: " + message);
+                String response = parseMessage(message);
+                //create ObjectOutputStream object
+                ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+                //write object to Socket
+                oos.writeObject(response);
+                //close resources
+                ois.close();
+                oos.close();
+                socket.close();
+                //terminate the server if client sends exit request
+                if(message.equalsIgnoreCase("exit")) break;
             }
+
+            server.close();
         } catch (Exception ex) {
             System.out.println("Error in server main: " + ex);
         }
