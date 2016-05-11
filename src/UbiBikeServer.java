@@ -142,7 +142,7 @@ public class UbiBikeServer {
             String username = splitMessage[1];
 
             if(!users.containsKey(username)) {
-                return "Login error: User '\" + username + \"' is not registered!";
+                return "Login error: User '" + username + "' is not registered!";
             }
 
             String password = splitMessage[2];
