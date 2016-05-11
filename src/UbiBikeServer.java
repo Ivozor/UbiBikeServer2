@@ -1,7 +1,6 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.Charset;
 import java.util.*;
 
 public class UbiBikeServer {
@@ -15,7 +14,7 @@ public class UbiBikeServer {
     public static void main(String[] args) {
 
 
-        System.out.println("UbiBike Server 2 started!");
+        System.out.println(new Date().toString() + " UbiBike Server 2 started!");
 
         // TODO - init stations properly
         Station station1 = new Station("station1", new Location(111, 111, 111), 5);
@@ -28,16 +27,16 @@ public class UbiBikeServer {
             ServerSocket server = new ServerSocket(4444);
             //keep listens indefinitely until receives 'exit' call or program terminates
             while(true){
-                System.out.println("Waiting for client request");
+                System.out.println(new Date().toString() + " Waiting for client request");
                 //creating socket and waiting for client connection
                 Socket socket = server.accept();
                 //read from socket to ObjectInputStream object
                 ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
                 //convert ObjectInputStream object to String
                 String message = (String) ois.readObject();
-                System.out.println("Message Received: " + message);
+                System.out.println(new Date().toString() + " Message Received: " + message);
                 String response = parseMessage(message);
-                System.out.println("Message to send: " + response);
+                System.out.println(new Date().toString() + " Message to send: " + response);
                 //create ObjectOutputStream object
                 ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
                 //write object to Socket
@@ -52,7 +51,7 @@ public class UbiBikeServer {
 
             server.close();
         } catch (Exception ex) {
-            System.out.println("Error in server main: " + ex);
+            System.out.println(new Date().toString() + " Error in server main: " + ex);
         }
     }
 
