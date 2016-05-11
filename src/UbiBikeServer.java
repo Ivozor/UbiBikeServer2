@@ -45,11 +45,8 @@ public class UbiBikeServer {
                 ois.close();
                 oos.close();
                 socket.close();
-                //terminate the server if client sends exit request
-                if(message.equalsIgnoreCase("exit")) break;
-            }
 
-            server.close();
+            }
         } catch (Exception ex) {
             System.out.println(new Date().toString() + " Error in server main: " + ex);
         }
