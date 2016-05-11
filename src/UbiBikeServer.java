@@ -348,18 +348,21 @@ public class UbiBikeServer {
                 return "ERROR|Get stations with bikes error: User '" + username + "' is not registered!";
             }
 
-
-            User activeUser = users.get(username);
             if(loggedUsers.containsKey(username)) {
-                HashMap<String, Station> stationsAvailable = new HashMap<String, Station>();
+                // messages template:
+                // ok | stations available | station list
+                // OK|123|&stationName-xxxx+yyyy+zzzz&stationName-xxxx+yyyy+zzzz
+                String stationList = "";
+                int stationsAvailable= 0;
                 for (HashMap.Entry<String, Station> station : stations.entrySet())
                 {
                     if(station.getValue().bikes > station.getValue().reservations.size()) {
-                        stationsAvailable.put(station.getKey(), station.getValue());
+                        Station currentStation = station.getValue();
+                        stationsAvailable++;
+                        stationList += "&" + currentStation.stationName + "-" + currentStation.location.degrees + "+" + currentStation.location.minutes + "+" + currentStation.location.seconds;
                     }
                 }
-                // TODO - add station data to string
-                return "OK|Found '" + stationsAvailable.size() + "' stations with bikes available";
+                return "OK|" + stationsAvailable + "|" + stationList;
             }
             else {
                 return "ERROR|User '" + username + "' must be logged in to get the stations with bikes!";
