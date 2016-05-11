@@ -37,6 +37,7 @@ public class UbiBikeServer {
                 String message = (String) ois.readObject();
                 System.out.println("Message Received: " + message);
                 String response = parseMessage(message);
+                System.out.println("Message to send: " + response);
                 //create ObjectOutputStream object
                 ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
                 //write object to Socket
