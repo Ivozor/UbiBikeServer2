@@ -16,11 +16,7 @@ public class UbiBikeServer {
 
         System.out.println(new Date().toString() + " UbiBike Server 2 started!");
 
-        // TODO - init stations properly
-        Station station1 = new Station("station1", new Location(111, 111, 111), 5);
-        Station station2 = new Station("station2", new Location(222, 222, 222), 5);
-        stations.put(station1.stationName, station1);
-        stations.put(station2.stationName, station2);
+        initStations();
 
 
         try {
@@ -378,7 +374,20 @@ public class UbiBikeServer {
 
     //endregion
 
+    // region stationInitialization
+    public static void initStations() {
+        Station station1 = new Station("Station1", new Location(111, 111, 111), 5);
+        Station station2 = new Station("Station2", new Location(222, 222, 222), 10);
+        Station station3 = new Station("Station3", new Location(333, 333, 333), 15);
 
+
+        //add stations to global list
+        stations.put(station1.stationName, station1);
+        stations.put(station2.stationName, station2);
+        stations.put(station3.stationName, station3);
+
+    }
+    //endregion
 
     //region SubClasses
 
