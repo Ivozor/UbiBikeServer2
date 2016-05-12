@@ -78,6 +78,9 @@ public class UbiBikeServer {
                 case "STATIONSBIKES":
                     result = stationsWithBikes(splitMessage);
                     break;
+                case "SENDTRAJECTORY":
+                    result = sendTrajectory(splitMessage);
+                    break;
 
                 default:
                     result = "Invalid Operation: " + splitMessage[0];
@@ -225,7 +228,7 @@ public class UbiBikeServer {
                 else {
                     user1.points -= pointsToSend;
                     user2.points += pointsToSend;
-                    return "OK|User '" + username1 + "' gave '" + pointsToSend + "' points to user '" + username2 + "'!";
+                    return "OK|" + user1.username + "|" + user1.points + "|" + user2.username + "|" + user2.points;
 
                 }
             }
@@ -371,7 +374,56 @@ public class UbiBikeServer {
         }
     }
 
+    public static String sendTrajectory(String[] splitMessage) {
+        //Message Template: SENDTRAJECTORY|username|&trajectory1name-xxxx+yyyy+zzzz-xxxx+yyyy+zzzz-xxxx+yyyy+zzzz
 
+        try {
+
+            if(splitMessage.length != 3)
+            {
+                return "ERROR|Send trajectory error: Invalid number of parameters!";
+            }
+
+            String username = splitMessage[1];
+            String trajectoryString = splitMessage[2];
+
+
+            if(!users.containsKey(username)) {
+                return "ERROR|Send trajectory error: User '" + username + "' is not registered!";
+            }
+
+
+            User activeUser = users.get(username);
+            if(loggedUsers.containsKey(username)) {
+                //&trajectory1name-xxxx+yyyy+zzzz-xxxx+yyyy+zzzz-xxxx+yyyy+zzzz&trajectory1name-xxxx+yyyy+zzzz-xxxx+yyyy+zzzz-xxxx+yyyy+zzzz
+                String[] trajectorySplit = trajectoryString.split("&");
+                for(int i=1; i < trajectorySplit.length; i++) {
+                    //trajectory1name-xxxx+yyyy+zzzz-xxxx+yyyy+zzzz-xxxx+yyyy+zzzz
+                    String[] trajectoryLocationsSplit = trajectorySplit[i].split("\\-");
+
+                    Trajectory trajectory = new Trajectory(trajectorySplit[0], new ArrayList<Location>());
+
+                    for(int j=1; j < trajectoryLocationsSplit.length; j++) {
+                        //xxxx+yyyy+zzzz
+                        String[] locationSplit = trajectoryLocationsSplit[i].split("\\+");
+                        Location location = new Location(Integer.parseInt(locationSplit[0]), Integer.parseInt(locationSplit[1]), Integer.parseInt(locationSplit[2]));
+                        trajectory.locations.add(location);
+                    }
+                    activeUser.trajectories.add(trajectory);
+                }
+                return "OK|Trajectory received for user '" + username + "'!";
+            }
+            else {
+                return "ERROR|User '" + username + "' must be logged in to send trajectory!";
+            }
+        }
+        catch (Exception ex) {
+            System.out.println("Error while sending trajectory:");
+            System.out.println(ex);
+            return "ERROR|Send trajectory error.";
+        }
+
+    }
     //endregion
 
     // region stationInitialization
