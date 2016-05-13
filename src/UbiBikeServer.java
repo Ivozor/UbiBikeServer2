@@ -81,6 +81,9 @@ public class UbiBikeServer {
                 case "SENDTRAJECTORY":
                     result = sendTrajectory(splitMessage);
                     break;
+                case "DROP":
+                    result = dropBike(splitMessage);
+                    break;
 
                 default:
                     result = "Invalid Operation: " + splitMessage[0];
@@ -328,6 +331,47 @@ public class UbiBikeServer {
             System.out.println("Error while reserving:");
             System.out.println(ex);
             return "ERROR|Reserving error.";
+        }
+    }
+
+    private static String dropBike(String[] splitMessage) {
+        //Message Template: DROP|username|stationname
+        try {
+
+            if(splitMessage.length != 3)
+            {
+                return "ERROR|Drop bike error: Invalid number of parameters!";
+            }
+
+            String username = splitMessage[1];
+            String stationname = splitMessage[2];
+
+            if(!users.containsKey(username)) {
+                return "ERROR|Drop bike error: User '" + username + "' is not registered!";
+            }
+
+
+            User activeUser = users.get(username);
+            if(loggedUsers.containsKey(username)) {
+                if(stations.containsKey(stationname)) {
+                    Station station = stations.get(stationname);
+
+                    station.bikes++;
+                    return "OK|Bike dropped by user '" + username + "' in station '" + stationname + "'!";
+
+                }
+                else {
+                    return "ERROR|Station '" + stationname + "' is not available!";
+                }
+            }
+            else {
+                return "ERROR|User '" + username + "' must be logged in to drop a bike!";
+            }
+        }
+        catch (Exception ex) {
+            System.out.println("Error while dropping bike:");
+            System.out.println(ex);
+            return "ERROR|Drop bike error.";
         }
     }
 
