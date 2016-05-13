@@ -75,6 +75,9 @@ public class UbiBikeServer {
                 case "RESERVE":
                     result = reserveBike(splitMessage);
                     break;
+                case "STATIONS":
+                    result = getStations(splitMessage);
+                    break;
                 case "STATIONSBIKES":
                     result = stationsWithBikes(splitMessage);
                     break;
@@ -313,6 +316,7 @@ public class UbiBikeServer {
                     if(station.bikes > station.reservations.size())
                     {
                         station.reservations.add(username);
+                        station.bikes--;
                         return "OK|Bike reserved for user '" + username + "' in station '" + stationname + "'!";
                     }
                     else {
@@ -375,6 +379,46 @@ public class UbiBikeServer {
         }
     }
 
+    private static String getStations(String[] splitMessage) {
+        //Message Template: STATIONS|username
+        try {
+
+            if(splitMessage.length != 2)
+            {
+                return "ERROR|Get stations error: Invalid number of parameters!";
+            }
+
+            String username = splitMessage[1];
+
+            if(!users.containsKey(username)) {
+                return "ERROR|Get stations error: User '" + username + "' is not registered!";
+            }
+
+            if(loggedUsers.containsKey(username)) {
+                // messages template:
+                // ok | stations available | station list
+                // OK|123|&stationName;xxxx+yyyy&stationName;xxxx+yyyy
+                String stationList = "";
+                int stationsAvailable= 0;
+                for (HashMap.Entry<String, Station> station : stations.entrySet())
+                {
+                    Station currentStation = station.getValue();
+                    stationsAvailable++;
+                    stationList += "&" + currentStation.stationName + ";" + currentStation.location.latitude + "+" + currentStation.location.longitude;
+                }
+                return "OK|" + stationsAvailable + "|" + stationList;
+            }
+            else {
+                return "ERROR|User '" + username + "' must be logged in to get the stations!";
+            }
+        }
+        catch (Exception ex) {
+            System.out.println("Error while getting stations:");
+            System.out.println(ex);
+            return "ERROR|Getting stations error.";
+        }
+    }
+
 
     private static String stationsWithBikes(String[] splitMessage) {
         //Message Template: STATIONSBIKES|username
@@ -399,7 +443,7 @@ public class UbiBikeServer {
                 int stationsAvailable= 0;
                 for (HashMap.Entry<String, Station> station : stations.entrySet())
                 {
-                    if(station.getValue().bikes > station.getValue().reservations.size()) {
+                    if(station.getValue().bikes > 0) {
                         Station currentStation = station.getValue();
                         stationsAvailable++;
                         stationList += "&" + currentStation.stationName + ";" + currentStation.location.latitude + "+" + currentStation.location.longitude;
