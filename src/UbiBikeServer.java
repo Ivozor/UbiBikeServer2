@@ -264,13 +264,13 @@ public class UbiBikeServer {
             if(loggedUsers.containsKey(username)) {
                 // messages template:
                 // ok | points | trajectorylist
-                // OK|123|&trajectory1name-xxxx+yyyy-xxxx+yyyy-xxxx+yyyy&trajectory2-xxxx+yyyy-xxxx+yyyy-xxxx+yyyy
+                // OK|123|&trajectory1name;xxxx+yyyy;xxxx+yyyy;xxxx+yyyy&trajectory2;xxxx+yyyy;xxxx+yyyy;xxxx+yyyy
                 String userPoints = new Integer(activeUser.points).toString();
                 String userTrajectories = "";
                 for (Trajectory trajectory: activeUser.trajectories) {
                     userTrajectories += "&" + trajectory.trajectoryName;
                     for (Location location: trajectory.locations) {
-                        userTrajectories += "-" + location.latitude + "+" + location.longitude;
+                        userTrajectories += ";" + location.latitude + "+" + location.longitude;
                     }
                 }
                 return "OK|" + userPoints + "|" + userTrajectories;
@@ -350,7 +350,7 @@ public class UbiBikeServer {
             if(loggedUsers.containsKey(username)) {
                 // messages template:
                 // ok | stations available | station list
-                // OK|123|&stationName-xxxx+yyyy&stationName-xxxx+yyyy
+                // OK|123|&stationName;xxxx+yyyy&stationName;xxxx+yyyy
                 String stationList = "";
                 int stationsAvailable= 0;
                 for (HashMap.Entry<String, Station> station : stations.entrySet())
@@ -358,7 +358,7 @@ public class UbiBikeServer {
                     if(station.getValue().bikes > station.getValue().reservations.size()) {
                         Station currentStation = station.getValue();
                         stationsAvailable++;
-                        stationList += "&" + currentStation.stationName + "-" + currentStation.location.latitude + "+" + currentStation.location.longitude;
+                        stationList += "&" + currentStation.stationName + ";" + currentStation.location.latitude + "+" + currentStation.location.longitude;
                     }
                 }
                 return "OK|" + stationsAvailable + "|" + stationList;
@@ -375,7 +375,7 @@ public class UbiBikeServer {
     }
 
     public static String sendTrajectory(String[] splitMessage) {
-        //Message Template: SENDTRAJECTORY|username|&trajectory1name-xxxx+yyyy-xxxx+yyyy-xxxx+yyyy
+        //Message Template: SENDTRAJECTORY|username|&trajectory1name;xxxx+yyyy;xxxx+yyyy;xxxx+yyyy
 
         try {
 
@@ -395,11 +395,11 @@ public class UbiBikeServer {
 
             User activeUser = users.get(username);
             if(loggedUsers.containsKey(username)) {
-                //&trajectory1name-xxxx+yyyy-xxxx+yyyy-xxxx+yyyy&trajectory1name-xxxx+yyyy-xxxx+yyyy-xxxx+yyyy
+                //&trajectory1name-xxxx+yyyy;xxxx+yyyy;xxxx+yyyy&trajectory1name;xxxx+yyyy;xxxx+yyyy;xxxx+yyyy
                 String[] trajectorySplit = trajectoryString.split("&");
                 for(int i=1; i < trajectorySplit.length; i++) {
-                    //trajectory1name-xxxx+yyyy-xxxx+yyyy-xxxx+yyyy
-                    String[] trajectoryLocationsSplit = trajectorySplit[i].split("\\-");
+                    //trajectory1name;xxxx+yyyy;xxxx+yyyy;xxxx+yyyy
+                    String[] trajectoryLocationsSplit = trajectorySplit[i].split(";");
 
                     Trajectory trajectory = new Trajectory(trajectorySplit[0], new ArrayList<Location>());
 
