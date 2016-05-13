@@ -406,7 +406,7 @@ public class UbiBikeServer {
                     for(int j=1; j < trajectoryLocationsSplit.length; j++) {
                         //xxxx+yyyy
                         String[] locationSplit = trajectoryLocationsSplit[i].split("\\+");
-                        Location location = new Location(Integer.parseInt(locationSplit[0]), Integer.parseInt(locationSplit[1]));
+                        Location location = new Location(Double.parseDouble(locationSplit[0]), Double.parseDouble(locationSplit[1]));
                         trajectory.locations.add(location);
                     }
                     activeUser.trajectories.add(trajectory);
@@ -428,9 +428,9 @@ public class UbiBikeServer {
 
     // region stationInitialization
     public static void initStations() {
-        Station station1 = new Station("Station1", new Location(111, 111), 5);
-        Station station2 = new Station("Station2", new Location(222, 222), 10);
-        Station station3 = new Station("Station3", new Location(333, 333), 15);
+        Station station1 = new Station("Station1", new Location(38.75322986, -9.20676827), 5);
+        Station station2 = new Station("Station2", new Location(38.75077, -9.19113), 10);
+        Station station3 = new Station("Station3", new Location(38.7601071, -9.18283225), 15);
 
 
         //add stations to global list
@@ -476,10 +476,10 @@ public class UbiBikeServer {
 
 
     public static class Location {
-        public float latitude;
-        public float longitude;
+        public double latitude;
+        public double longitude;
 
-        public Location(float lat, float lon) {
+        public Location(double lat, double lon) {
             latitude = lat;
             longitude = lon;
         }
