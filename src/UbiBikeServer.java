@@ -428,9 +428,9 @@ public class UbiBikeServer {
 
     // region stationInitialization
     public static void initStations() {
-        Station station1 = new Station("Station1", new Location(38.75322986, -9.20676827), 5);
-        Station station2 = new Station("Station2", new Location(38.75077, -9.19113), 10);
-        Station station3 = new Station("Station3", new Location(38.7601071, -9.18283225), 15);
+        Station station1 = new Station("Station 1", new Location(38.75322986, -9.20676827), 5);
+        Station station2 = new Station("Station 2", new Location(38.75077, -9.19113), 10);
+        Station station3 = new Station("Station 3", new Location(38.7601071, -9.18283225), 15);
 
 
         //add stations to global list
